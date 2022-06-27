@@ -1,0 +1,3 @@
+check:
+	@echo "run unit tests.."
+	go test ./...

@@ -12,10 +12,6 @@ func NewGarbageCollector() *GarbageCollector {
 	return &GarbageCollector{}
 }
 
-func isDeadComponent(cmp *component.Deletable) bool {
-	return !cmp.Alive
-}
-
 func (g *GarbageCollector) OnUpdate(w *ecs.World) {
 	g.updateTTLComponents(w)
 	g.deleteDeadEntities(w)
@@ -43,4 +39,8 @@ func (g *GarbageCollector) deleteDeadEntities(w *ecs.World) {
 	for ent := range deadComponents {
 		w.RemoveEntity(ent)
 	}
+}
+
+func isDeadComponent(cmp *component.Deletable) bool {
+	return !cmp.Alive
 }

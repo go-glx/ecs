@@ -1,0 +1,34 @@
+version: 3
+
+exclude:
+  - test
+
+components:
+  ecs:
+    in: ecs/**
+  ecs-system:
+    in: system
+  ecs-component:
+    in: component
+  logger:
+    in: log
+  dev-tools:
+    in: .
+
+deps:
+  ecs:
+    mayDependOn:
+      - ecs
+      - logger
+
+  ecs-system:
+    mayDependOn:
+      - ecs
+      - ecs-component
+
+  ecs-component:
+    mayDependOn:
+      - ecs
+
+  dev-tools:
+    anyVendorDeps: true
