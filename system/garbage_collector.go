@@ -18,20 +18,20 @@ func (g *GarbageCollector) OnUpdate(w *ecs.World) {
 }
 
 func (g *GarbageCollector) updateTTLComponents(w *ecs.World) {
-	ttlComponents := ecs.FindByComponent(w, &component.TimeToLife{})
+	ttlComponents := ecs.FindComponent[component.TimeToLife](w)
 	for ent, cmp := range ttlComponents {
 		if cmp.TicksLeft > 0 {
 			cmp.TicksLeft--
 		}
 
 		if cmp.TicksLeft <= 0 {
-			ecs.MustFindComponentOf(ent, &component.Deletable{}).Alive = false
+			ecs.MustFindComponentOf[component.Deletable](ent).Alive = false
 		}
 	}
 }
 
 func (g *GarbageCollector) deleteDeadEntities(w *ecs.World) {
-	deadComponents := ecs.FindByComponentWhere(w, &component.Deletable{}, isDeadComponent)
+	deadComponents := ecs.FindComponentWhere[component.Deletable](w, isDeadComponent)
 	if len(deadComponents) == 0 {
 		return
 	}

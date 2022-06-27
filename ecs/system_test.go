@@ -8,7 +8,7 @@ func testCreateMutateSystem() *testMutateSystem {
 }
 
 func (t *testMutateSystem) OnUpdate(w *World) {
-	for _, cmp := range FindByComponent(w, &testMutableComponent{}) {
+	for _, cmp := range FindComponent[testMutableComponent](w) {
 		cmp.counter++
 	}
 }

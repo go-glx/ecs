@@ -10,23 +10,24 @@ import (
 // todo: fast query and filters
 // todo: component caches
 
-func FindByComponent[T any](w *World, sample T) map[*Entity]T {
-	sampleID := ids.Of(sample)
-	result := make(map[*Entity]T)
+func FindComponent[T any](w *World) map[*Entity]*T {
+	var TType T
+	sampleID := ids.Of(TType)
+	findResult := make(map[*Entity]*T)
 
 	for _, ent := range w.entities.Iterate() {
 		if cmp, exist := ent.components.Get(sampleID); exist {
-			result[ent] = cmp.(T)
+			findResult[ent] = cmp.(*T)
 		}
 	}
 
-	return result
+	return findResult
 }
 
-func FindByComponentWhere[T any](w *World, sample T, filter func(T) bool) map[*Entity]T {
-	result := make(map[*Entity]T)
+func FindComponentWhere[T any](w *World, filter func(*T) bool) map[*Entity]*T {
+	result := make(map[*Entity]*T)
 
-	for ent, cmp := range FindByComponent(w, sample) {
+	for ent, cmp := range FindComponent[T](w) {
 		if !filter(cmp) {
 			continue
 		}
@@ -37,14 +38,15 @@ func FindByComponentWhere[T any](w *World, sample T, filter func(T) bool) map[*E
 	return result
 }
 
-func MustFindComponentOf[T any](ent *Entity, sample T) T {
-	cmp, exist := ent.components.Get(ids.Of(sample))
+func MustFindComponentOf[T any](ent *Entity) *T {
+	var TType T
+	cmp, exist := ent.components.Get(ids.Of(TType))
 	if !exist {
 		panic(fmt.Errorf("failed get component '%s' from entity '%s': not exist",
-			ids.Of(sample),
+			ids.Of(TType),
 			ent.String(),
 		))
 	}
 
-	return cmp.(T)
+	return cmp.(*T)
 }

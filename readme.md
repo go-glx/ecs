@@ -11,7 +11,7 @@ for galaxy engine
 
 Library use generics for typing and require go1.18
 
-Safe for concurent use
+Not Safe for concurrent use
 
 ## Usage
 
@@ -86,7 +86,7 @@ ECS will help with entities/components fast filter:
 ```go
 func (s *Gravity) OnUpdate(w *ecs.World) {
   // full typing support, because of go1.18 generics
-  found := ecs.FindByComponent(w, &Node2D{})
+  found := ecs.FindComponent[Node2D](w)
   
   for entity, cmp := range found {
     // entity = *Entity instance
@@ -146,7 +146,7 @@ func (s *Drawer) OnSync(w *ecs.World) {
   // OnSync called right after world.OnUpdate
   // its best place to draw world
 
-  textures := ecs.FindByComponent(w, &Texture{})
+  textures := ecs.FindComponent[Texture](w)
   for _, tex := range textures {
     s.renderer.DrawBox(tex.x, tex.y, tex.w, tex.h)
   }

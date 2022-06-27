@@ -1,8 +1,7 @@
 package ids
 
 import (
-	"fmt"
-	"strings"
+	"reflect"
 )
 
 type ObjectID = string
@@ -13,10 +12,13 @@ type ObjectID = string
 //  - `Obj{}`      => `pkg.Obj`
 //  - `&Obj{}`     => `pkg.Obj`
 func Of(obj any) ObjectID {
-	return strings.Replace(
-		fmt.Sprintf("%T", obj),
-		"*",
-		"",
-		1,
-	)
+	s := reflect.TypeOf(obj).String()
+
+	if len(s) > 1 {
+		if s[0] == '*' {
+			return s[1:]
+		}
+	}
+
+	return s
 }
