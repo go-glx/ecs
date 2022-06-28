@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/fe3dback/glx-ecs/ecs/internal/ids"
 )
 
 func TestNewEntity(t *testing.T) {
@@ -38,7 +36,7 @@ func TestNewEntity(t *testing.T) {
 	assert.Equal(t, 2, ent.components.Len(), "expect two unique components")
 
 	// -- inner black magic testing
-	mutableCmp, mutableCmpExist := ent.components.Get(ids.Of(testMutableComponent{}))
+	mutableCmp, mutableCmpExist := ent.components.Get(testMutableComponentTypeID)
 	assert.True(t, mutableCmpExist)
 	assert.Equal(t, 42, mutableCmp.(*testMutableComponent).counter, "should not be override to 5 from AddComponent duplicate call")
 }

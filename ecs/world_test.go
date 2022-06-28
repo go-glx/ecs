@@ -4,12 +4,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/fe3dback/glx-ecs/ecs/internal/ids"
 )
 
 func TestNewWorld(t *testing.T) {
-	w := NewWorld()
+	r := NewRegistry()
+	r.RegisterSystem(testCreateMutateSystem())
+	r.RegisterComponent(testCreateMutableComponent())
+	r.RegisterComponent(testCreateComplexComponent())
+
+	w := NewWorld(r)
 
 	// -- create entities
 
@@ -25,11 +28,11 @@ func TestNewWorld(t *testing.T) {
 	assert.Equal(t, 0, w.entities.Len(), "entities queued, but not created yet")
 	assert.Equal(t, 0, len(w.Entities()), "entities queued, but not created yet")
 
-	w.AddSystem(testCreateMutateSystem())
+	w.AddSystem(testMutateSystemTypeID)
 	assert.Equal(t, 0, w.systems.Len(), "system queued, but not created yet")
 
 	// -- check component state
-	tmpCmp, _ := mutEntity.components.Get(ids.Of(&testMutableComponent{}))
+	tmpCmp, _ := mutEntity.components.Get(testMutableComponentTypeID)
 	cmpState := tmpCmp.(*testMutableComponent)
 
 	assert.Equal(t, 0, cmpState.counter)

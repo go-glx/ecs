@@ -2,6 +2,8 @@ package component
 
 import "github.com/fe3dback/glx-ecs/ecs"
 
+const TimeToLifeTypeID = "TimeToLife-b935a9df3cdd"
+
 type TimeToLife struct {
 	TicksLeft uint
 }
@@ -16,8 +18,12 @@ func NewTimeToLife(ticksLeft uint) *TimeToLife {
 	}
 }
 
-func (ttl *TimeToLife) RequireComponents() []ecs.Component {
-	return []ecs.Component{
-		Deletable{},
+func (c TimeToLife) TypeID() ecs.ComponentTypeID {
+	return TimeToLifeTypeID
+}
+
+func (c TimeToLife) RequireComponents() []ecs.ComponentTypeID {
+	return []ecs.ComponentTypeID{
+		DeletableTypeID,
 	}
 }

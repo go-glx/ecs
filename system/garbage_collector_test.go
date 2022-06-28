@@ -10,6 +10,11 @@ import (
 )
 
 func TestGarbageCollector(t *testing.T) {
+	r := ecs.NewRegistry()
+	r.RegisterSystem(NewGarbageCollector())
+	r.RegisterComponent(component.NewDeletable())
+	r.RegisterComponent(component.NewTimeToLife(0))
+
 	// -- create world
 	ent1 := ecs.NewEntity("ent1")
 	ent1.AddComponent(component.NewDeletable())
@@ -19,20 +24,18 @@ func TestGarbageCollector(t *testing.T) {
 	ent2.AddComponent(component.NewTimeToLife(3))
 
 	// -- create world
-	world := ecs.NewWorld()
+	world := ecs.NewWorld(
+		r,
+		ecs.WithInitialSystems(GarbageCollectorTypeID),
+		ecs.WithInitialEntities(ent1, ent2),
+	)
 
-	// -- - with entities
-	world.AddEntity(ent1)
-	world.AddEntity(ent2)
-
-	// -- - and systems
-	world.AddSystem(NewGarbageCollector())
+	assert.Equal(t, 2, len(world.Entities()), "entities created, both alive")
 
 	// -- emulate step
-
 	// -- - step 1
 	world.Update()
-	assert.Equal(t, 2, len(world.Entities()), "entities created, both alive")
+	assert.Equal(t, 2, len(world.Entities()), "both alive for now")
 
 	world.RemoveEntity(ent1)
 	assert.Equal(t, 2, len(world.Entities()), "ent1 delete is queued, but not executed")

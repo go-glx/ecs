@@ -16,7 +16,7 @@ type (
 	Entity struct {
 		name       string
 		id         entityID
-		components *collection.UniqueCollection[ids.ObjectID, Component]
+		components *collection.UniqueCollection[ComponentTypeID, Component]
 	}
 )
 
@@ -24,7 +24,7 @@ func NewEntity(name string) *Entity {
 	return &Entity{
 		name:       name,
 		id:         entityIDs.Next(),
-		components: collection.NewUniqueCollection[ids.ObjectID, Component](),
+		components: collection.NewUniqueCollection[ComponentTypeID, Component](),
 	}
 }
 
@@ -37,43 +37,39 @@ func (e *Entity) String() string {
 }
 
 func (e *Entity) AddComponent(cmp Component) {
-	e.assertComponentValid(cmp, "AddComponent")
-	e.components.Set(ids.Of(cmp), cmp)
+	e.assertComponentValid(cmp)
+	e.components.Set(cmp.TypeID(), cmp)
 }
 
-func (e *Entity) RemoveComponent(sample Component) {
-	e.components.Remove(ids.Of(sample))
+func (e *Entity) RemoveComponent(typeID ComponentTypeID) {
+	e.components.Remove(typeID)
 }
 
-func (e *Entity) assertComponentValid(cmp Component, inAction string) {
+func (e *Entity) assertComponentValid(cmp Component) {
 	if cmp == nil {
-		panic(fmt.Errorf("failed %s: trying to add nil component to entity '%s'",
-			inAction,
+		panic(fmt.Errorf("invalid component: trying to add nil component to entity '%s'",
 			e.String(),
 		))
 	}
 
 	if reflect.ValueOf(cmp).Kind() != reflect.Ptr {
-		panic(fmt.Errorf("failed %s: '%s' component '%s': should by passed as mutable pointer",
-			inAction,
+		panic(fmt.Errorf("invalid component: component '%s' of entity '%s': should by passed as mutable pointer",
+			cmp.TypeID(),
 			e.String(),
-			ids.Of(cmp),
 		))
 	}
 
 	if reqCmp, ok := cmp.(ComponentWithRequirements); ok {
 		for _, requirement := range reqCmp.RequireComponents() {
-			requirementComponentID := ids.Of(requirement)
-			if e.components.Has(requirementComponentID) {
+			if e.components.Has(requirement) {
 				continue
 			}
 
 			panic(fmt.Errorf(
-				"failed %s: component '%s' of entity '%s': requirement of '%s' not satisfied",
-				inAction,
-				ids.Of(cmp),
+				"invalid component: component '%s' of entity '%s': requirement of '%s' not satisfied",
+				cmp.TypeID(),
 				e.String(),
-				requirementComponentID,
+				requirement,
 			))
 		}
 	}

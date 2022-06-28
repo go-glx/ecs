@@ -5,7 +5,8 @@ import (
 )
 
 func BenchmarkFindByComponent(b *testing.B) {
-	w := NewWorld()
+	r := NewRegistry()
+	w := NewWorld(r)
 
 	ent := NewEntity("entWithNode")
 	ent.AddComponent(testCreateMutableComponent())

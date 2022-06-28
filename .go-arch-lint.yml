@@ -1,5 +1,8 @@
 version: 3
 
+excludeFiles:
+  - "_test\.go$"
+
 exclude:
   - test
 
@@ -12,6 +15,9 @@ components:
     in: component
   logger:
     in: log
+  wrapping-functional:
+    in:
+      - snapshot
   dev-tools:
     in: .
 
@@ -32,3 +38,9 @@ deps:
 
   dev-tools:
     anyVendorDeps: true
+
+  wrapping-functional:
+    mayDependOn:
+      - ecs
+      - ecs-component
+      - ecs-system

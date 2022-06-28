@@ -5,11 +5,17 @@ import (
 	"github.com/fe3dback/glx-ecs/ecs"
 )
 
+const GarbageCollectorTypeID = "GarbageCollector-adc3353dd900"
+
 type GarbageCollector struct {
 }
 
 func NewGarbageCollector() *GarbageCollector {
 	return &GarbageCollector{}
+}
+
+func (g GarbageCollector) TypeID() ecs.SystemTypeID {
+	return GarbageCollectorTypeID
 }
 
 func (g *GarbageCollector) OnUpdate(w *ecs.World) {

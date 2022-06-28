@@ -1,48 +1,53 @@
 package ecs
 
 import (
-	"fmt"
-	"reflect"
-
 	"github.com/fe3dback/glx-ecs/ecs/internal/collection"
-	"github.com/fe3dback/glx-ecs/ecs/internal/ids"
 )
 
 type World struct {
+	registry *Registry
+
 	entities *collection.UniqueCollection[entityID, *Entity]
-	systems  *collection.UniqueCollection[ids.ObjectID, System]
+	systems  *collection.UniqueCollection[SystemTypeID, System]
 
 	createEntitiesQueue []*Entity
-	createSystemsQueue  []System
 	dropEntitiesQueue   []entityID
-	dropSystemsQueue    []ids.ObjectID
+	createSystemsQueue  []SystemTypeID
+	dropSystemsQueue    []SystemTypeID
 }
 
-func NewWorld() *World {
-	return &World{
+func NewWorld(registry *Registry, initializers ...WorldInitializer) *World {
+	world := &World{
+		registry: registry,
+
 		entities: collection.NewUniqueCollection[entityID, *Entity](),
-		systems:  collection.NewUniqueCollection[ids.ObjectID, System](),
+		systems:  collection.NewUniqueCollection[SystemTypeID, System](),
 
 		createEntitiesQueue: make([]*Entity, 0),
-		createSystemsQueue:  make([]System, 0),
 		dropEntitiesQueue:   make([]entityID, 0),
-		dropSystemsQueue:    make([]ids.ObjectID, 0),
+		createSystemsQueue:  make([]SystemTypeID, 0),
+		dropSystemsQueue:    make([]SystemTypeID, 0),
 	}
+
+	for _, init := range initializers {
+		init(world)
+	}
+
+	return world
 }
 
 // AddSystem will not add System immediately after call,
 // instead it will add System to queue,
 // all systems will be created right before world Update
-func (w *World) AddSystem(system System) {
-	w.assertSystemValid(system, "AddSystem")
-	w.createSystemsQueue = append(w.createSystemsQueue, system)
+func (w *World) AddSystem(systemTypeID SystemTypeID) {
+	w.createSystemsQueue = append(w.createSystemsQueue, systemTypeID)
 }
 
 // RemoveSystem will not remove system immediately after call
 // this just mark system as deleted
 // all systems will be deleted after world Update
-func (w *World) RemoveSystem(system System) {
-	w.dropSystemsQueue = append(w.dropSystemsQueue, ids.Of(system))
+func (w *World) RemoveSystem(systemTypeID SystemTypeID) {
+	w.dropSystemsQueue = append(w.dropSystemsQueue, systemTypeID)
 }
 
 // AddEntity will not add Entity immediately after call,
@@ -57,6 +62,22 @@ func (w *World) AddEntity(entity *Entity) {
 // all entities will be deleted after world Update
 func (w *World) RemoveEntity(entity *Entity) {
 	w.dropEntitiesQueue = append(w.dropEntitiesQueue, entity.id)
+}
+
+func (w *World) addEntityInternal(entity *Entity) {
+	w.assertEntityHasKnownComponents(entity)
+	w.entities.Set(entity.id, entity)
+}
+
+func (w *World) addSystemInternal(systemTypeID SystemTypeID) {
+	w.systems.Set(systemTypeID, w.registry.getSystemOfType(systemTypeID))
+}
+
+func (w *World) assertEntityHasKnownComponents(entity *Entity) {
+	for typeID := range entity.components.Iterate() {
+		// function will panic, if component not known
+		_ = w.registry.getDefaultComponentOfType(typeID)
+	}
 }
 
 // Update should be called every game tick (frame)
@@ -93,21 +114,6 @@ func (w *World) Entities() []Entity {
 	return list
 }
 
-func (w *World) assertSystemValid(system System, inAction string) {
-	if system == nil {
-		panic(fmt.Errorf("failed %s: trying to add nil system to world",
-			inAction,
-		))
-	}
-
-	if reflect.ValueOf(system).Kind() != reflect.Ptr {
-		panic(fmt.Errorf("failed %s: system '%s': should by passed as mutable pointer",
-			inAction,
-			ids.Of(system),
-		))
-	}
-}
-
 func (w *World) update() {
 	for _, system := range w.systems.Iterate() {
 		if systemUpdatable, ok := system.(SystemUpdatable); ok {
@@ -118,11 +124,11 @@ func (w *World) update() {
 
 func (w *World) createQueued() {
 	for _, entity := range w.createEntitiesQueue {
-		w.entities.Set(entity.id, entity)
+		w.addEntityInternal(entity)
 	}
 
 	for _, system := range w.createSystemsQueue {
-		w.systems.Set(ids.Of(system), system)
+		w.addSystemInternal(system)
 	}
 
 	w.createEntitiesQueue = nil

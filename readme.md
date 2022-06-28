@@ -2,23 +2,35 @@
 
 __NOT READY FOR REAL USE__
 
-Version: 0.2
+Version: 0.3
 
 --
 
-Simple Entity Component Systems (ECS) pattern library
-for galaxy engine
+Simple and powerful __Entity Components Systems__ (ECS) pattern library
+for using in any game engine
 
 Library use generics for typing and require go1.18
 
 Not Safe for concurrent use
 
+--
+
+Features:
+- Generics (typed) API for components
+- Simple API
+- Support marshal/unmarshal world to XML and other formats
+- written with SOLID in mind, easy integrate with any engine, that respects dependency injection pattern
+- Fast component search/query (bitmaps, filters, etc..) (__TODO__) 
+
 ## Usage
 
-#### Basic world (game loop)
+### Game loop (empty world)
 
 ```go
-world := e.createWorld()
+import "github.com/fe3dback/glx-ecs/ecs"
+
+registry := ecs.NewRegistry()
+world := ecs.NewWorld(registry)
 
 for {
   world.Update() // update
@@ -26,33 +38,72 @@ for {
 }
 ```
 
-#### Adding entities to world
+### Entities
+
+Entity is ecs struct that has id and some other system fields
+
+But for simplicity is just **Collection** of **Components** 
 
 ```go
+import "github.com/fe3dback/glx-ecs/component"
+import "github.com/my/engine/owncmp"
+
 ent := ecs.NewEntity("my entity")
+
+// add some std components
 ent.AddComponent(component.NewDeletable())
 ent.AddComponent(component.NewTimeToLife(100))
 
-world.AddEntity(ent) // will be queued to next frame
+// add custom components
+ent.AddComponent(owncmp.NewNode2D(10, 5))
+
+// will be queued to next frame
+world.AddEntity(ent)
 ```
 
-#### Define custom components
+### Components
 
-Component in glx-ecs is just mutable __data__ struct, it not
-has any behavior
+Component is just mutable __data struct__, their not 
+have any behavior
 
 ```go
+import "github.com/fe3dback/glx-ecs/ecs"
+
+// some unique type ID
+// this used for marshal/unmarshal world to XML,JSON,etc..
+// this should NOT change during any code refactoring
+// recommended value: HumanReadableName + UUIDv4 (last part)
+const Node2DTypeID = "Node2D-a300548e4f48" 
+
+// Component data
 type Node2D struct {
-  x float64
-  y float64
+  X float64
+  Y float64
 }
 
+// Constructor
 func NewNode2D(x, y float64) *Node2D {
   return &Node2D{
-    x: x,
-    y: y,
+    X: x,
+    Y: y,
   }
 }
+
+// Single required ECS method for every component
+func (c Node2D) TypeID() ecs.ComponentTypeID {
+  return Node2DTypeID
+}
+
+// Optionally you can specify other components
+// that MUST be added to entity, before adding this
+// ECS will assert, that all required components exist
+// in Entity
+func (c Node2D) RequireComponents() []ecs.ComponentTypeID {
+  return []ecs.ComponentTypeID{
+    DeletableTypeID,
+  }
+}
+
 ```
 
 After component definition, you can add it to entity
@@ -61,18 +112,30 @@ After component definition, you can add it to entity
 ent.AddComponent(NewNode2D(10, 5))
 ```
 
-#### Add live to world with systems
+### Systems - Apply live to world
 
 Systems is just composition of __interface__`s:
 
 - `OnUpdate(w *World)`
 - `OnSync(w *World)`
 
+And system method `TypeID() ecs.SystemTypeID`
+
 Any struct can implement one or both of this methods:
 
 ```go
-type Gravity struct {
- // ..
+import "github.com/fe3dback/glx-ecs/ecs"
+
+const GravityTypeID = "Gravity-adc3353dd900"
+
+type Gravity struct {}
+
+func NewGravity() *Gravity { 
+  return &Gravity{}
+}
+
+func (g Gravity) TypeID() ecs.SystemTypeID {
+  return GravityTypeID
 }
 
 func (s *Gravity) OnUpdate(w *ecs.World) {
@@ -128,10 +191,34 @@ func (e *MyEngine) createWorld() *ecs.World {
 }
 ```
 
-#### Drawing world
+### Registry
+
+All __Systems__ and __Components__ MUST be registered
+before adding them to __World__
+
+Registry allows to marshal/unmarshal world automatically
+to XML or other formats, it`s very useful for storing levels in files
+
+```go
+r := ecs.NewRegistry()
+r.RegisterSystem(system.NewGarbageCollector())
+r.RegisterComponent(component.NewDeletable())
+
+// [5, 10] - is default values for this component
+// when world unmarshalled for example from XML
+// it can be previous version of this component
+// in this case ECS will use default values for
+// all new fields, not exist in XML snapshot
+r.RegisterComponent(owncmp.NewNode2D(5, 10))
+
+// create world
+world := ecs.NewWorld(r)
+```
+
+## Drawing world
 
 You can define some system that can draw
-all game object, or some specified components
+all game objects, or some specified components
 
 ```go
 type renderer interface {
