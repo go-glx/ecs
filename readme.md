@@ -271,10 +271,10 @@ Marshalled XML:
 ```xml
 <StaticWorld>
   <systems>
-    <system id="GarbageCollector-adc3353dd900"></system>
+    <system id="Gravity-adc3353dd900"></system>
   </systems>
   <entities>
-    <entity name="player">
+    <entity name="my entity">
       <components>
         <component id="Node2D-a300548e4f48">
           <props>
