@@ -22,8 +22,8 @@ type (
 
 func NewEntity(name string) *Entity {
 	return &Entity{
-		name:       name,
 		id:         entityIDs.Next(),
+		name:       name,
 		components: collection.NewUniqueCollection[ComponentTypeID, Component](),
 	}
 }
@@ -34,6 +34,10 @@ func (e *Entity) ID() uint64 {
 
 func (e *Entity) String() string {
 	return fmt.Sprintf("%s (%d)", e.name, e.id)
+}
+
+func (e *Entity) Name() string {
+	return e.name
 }
 
 func (e *Entity) AddComponent(cmp Component) {

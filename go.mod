@@ -2,7 +2,10 @@ module github.com/fe3dback/glx-ecs
 
 go 1.18
 
-require github.com/stretchr/testify v1.7.5
+require (
+	github.com/fatih/structs v1.1.0
+	github.com/stretchr/testify v1.7.5
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

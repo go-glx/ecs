@@ -43,3 +43,23 @@ func (s *UniqueCollection[K, V]) Has(id K) bool {
 	_, exist := s.collection[id]
 	return exist
 }
+
+func (s *UniqueCollection[K, V]) Values() []V {
+	values := make([]V, 0, len(s.collection))
+
+	for _, value := range s.collection {
+		values = append(values, value)
+	}
+
+	return values
+}
+
+func (s *UniqueCollection[K, V]) Keys() []K {
+	keys := make([]K, 0, len(s.collection))
+
+	for key := range s.collection {
+		keys = append(keys, key)
+	}
+
+	return keys
+}
