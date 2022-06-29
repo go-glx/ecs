@@ -27,6 +27,23 @@ func (r *Registry) RegisterComponent(component Component) {
 	r.components[component.TypeID()] = component
 }
 
+// CreateComponentWithDefaultValues will return gold copy of
+// component with provided typeID (default values)
+//
+// It is useful in snapshot tools for restoring World from
+// file storage
+func (r *Registry) CreateComponentWithDefaultValues(typeID ComponentTypeID) (Component, bool) {
+	cmp, exist := r.components[typeID]
+	if !exist {
+		return nil, false
+	}
+
+	var createdCopy Component
+	createdCopy = reflect.New(reflect.ValueOf(cmp).Elem().Type()).Interface().(Component)
+
+	return createdCopy, exist
+}
+
 // RegisterSystem will store System by their typeID
 //
 // This allows ECS marshal/unmarshal world from

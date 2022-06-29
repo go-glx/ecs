@@ -10,12 +10,12 @@ func Test_marshalXML(t *testing.T) {
 	actual, err := marshalXML(testCreateStaticWorld())
 	assert.NoError(t, err)
 
-	expected := testCreateExpectedXML()
+	expected := testCreateStaticWorldXML()
 
 	assert.Equal(t, expected, string(actual))
 }
 
-func testCreateExpectedXML() string {
+func testCreateStaticWorldXML() string {
 	//language=XML
 	return `<StaticWorld>
   <systems>

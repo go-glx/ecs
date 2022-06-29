@@ -1,8 +1,6 @@
 # Galaxy ECS
 
-__NOT READY FOR REAL USE__
-
-Version: 0.3
+Version: 0.5
 
 --
 
@@ -238,4 +236,54 @@ func (s *Drawer) OnSync(w *ecs.World) {
     s.renderer.DrawBox(tex.x, tex.y, tex.w, tex.h)
   }
 }
+```
+
+## Snapshot (Save/Load world to file)
+
+You can create snapshot from World and marshal it into
+XML or other format
+
+This allows for example to load World from external editor.
+Or maintain world save/load in custom game editor.
+
+This function not suitable for save/load game systems.
+Snapshot will have only public fields from all components,
+but not have any private fields evaluated during World.Update()
+
+Anyway in can be used as save/load game system in super simple games
+and if you maintain all components state only in Public properties
+
+```go
+import "github.com/fe3dback/glx-ecs/snapshot"
+
+w := ecs.NewWorld( .. )
+
+// encode
+snap := snapshot.Create(w)
+xml := snapshot.MarshalToXML(snap)
+
+// decode
+newSnap := snapshot.UnmarshalFromXML(xml)
+newWorld := snapshot.Restore(newSnap)
+```
+
+Marshalled XML:
+```xml
+<StaticWorld>
+  <systems>
+    <system id="GarbageCollector-adc3353dd900"></system>
+  </systems>
+  <entities>
+    <entity name="player">
+      <components>
+        <component id="Node2D-a300548e4f48">
+          <props>
+            <prop name="X" value="5"></prop>
+            <prop name="Y" value="10"></prop>
+          </props>
+        </component>
+      </components>
+    </entity>
+  </entities>
+</StaticWorld>
 ```

@@ -1,17 +1,42 @@
 package snapshot
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/fe3dback/glx-ecs/component"
 	"github.com/fe3dback/glx-ecs/ecs"
 	"github.com/fe3dback/glx-ecs/system"
 )
 
-func testCreateWorld() *ecs.World {
+func TestSnapshot(t *testing.T) {
+	// world -> xml
+	worldOrigin := testCreateWorld()
+	worldOriginStatic := Create(worldOrigin)
+	worldOriginXML, err := MarshalToXML(worldOriginStatic)
+	assert.NoError(t, err)
+
+	// xml -> world
+	worldBackStatic, err := UnmarshalFromXML(worldOriginXML)
+	assert.NoError(t, err)
+	worldBack := Restore(testCreateRegistry(), worldBackStatic)
+
+	// smoke assert
+	// all actual asserts written in encode/decode marshal/unmarshal files
+	assert.Equal(t, len(worldOrigin.Entities()), len(worldBack.Entities()))
+}
+
+func testCreateRegistry() *ecs.Registry {
 	r := ecs.NewRegistry()
 	r.RegisterSystem(system.NewGarbageCollector())
 	r.RegisterComponent(component.NewNode2D(1, 2))
 	r.RegisterComponent(component.NewDeletable())
 
+	return r
+}
+
+func testCreateWorld() *ecs.World {
 	ent1 := ecs.NewEntity("ent1")
 	ent1.AddComponent(component.NewNode2D(5, 10))
 	ent1.AddComponent(component.NewDeletable())
@@ -20,7 +45,7 @@ func testCreateWorld() *ecs.World {
 	ent2.AddComponent(component.NewNode2D(4, 7))
 
 	return ecs.NewWorld(
-		r,
+		testCreateRegistry(),
 		ecs.WithInitialEntities(ent1, ent2),
 		ecs.WithInitialSystems(system.GarbageCollectorTypeID),
 	)
