@@ -36,6 +36,15 @@ func NewWorld(registry *Registry, initializers ...WorldInitializer) *World {
 	return world
 }
 
+// InitializeWith allows to add some more initialization logic
+// into world creation process, this MUST be called
+// ONLY before first Update. (right after NewWorld)
+func (w *World) InitializeWith(initializers ...WorldInitializer) {
+	for _, init := range initializers {
+		init(w)
+	}
+}
+
 // AddSystem will not add System immediately after call,
 // instead it will add System to queue,
 // all systems will be created right before world Update
