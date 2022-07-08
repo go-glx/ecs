@@ -1,8 +1,4 @@
-# Galaxy ECS
-
-Version: 0.5
-
---
+# go-glx / ECS
 
 Simple and powerful __Entity Components Systems__ (ECS) pattern library
 for using in any game engine

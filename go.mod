@@ -1,4 +1,4 @@
-module github.com/fe3dback/glx-ecs
+module github.com/go-glx/ecs
 
 go 1.18
 
