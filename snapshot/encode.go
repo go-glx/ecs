@@ -55,16 +55,59 @@ func encodeEntity(entity *ecs.Entity) StaticEntity {
 
 func encodeComponents(components []ecs.Component) []StaticComponent {
 	encoded := make([]StaticComponent, 0, len(components))
+	order := resolveComponentOrder(components)
 
 	for _, component := range components {
-		encoded = append(encoded, encodeComponent(component))
+		encodedComponent := encodeComponent(component)
+		encodedComponent.Order = order[component.TypeID()]
+
+		encoded = append(encoded, encodedComponent)
 	}
 
 	sort.Slice(encoded, func(i, j int) bool {
-		return encoded[i].TypeID <= encoded[j].TypeID
+		return encoded[i].Order <= encoded[j].Order
 	})
 
 	return encoded
+}
+
+func resolveComponentOrder(components []ecs.Component) map[ecs.ComponentTypeID]int {
+	orderInd := 0
+	componentOrder := make(map[ecs.ComponentTypeID]int)
+	unresolvedCount := len(components)
+
+	sort.Slice(components, func(i, j int) bool {
+		return components[i].TypeID() <= components[j].TypeID()
+	})
+
+	for unresolvedCount > 0 {
+	checkComponent:
+		for _, component := range components {
+			if _, resolved := componentOrder[component.TypeID()]; resolved {
+				continue
+			}
+
+			var reqs []ecs.ComponentTypeID
+
+			if composite, ok := component.(ecs.ComponentWithRequirements); ok {
+				reqs = composite.RequireComponents()
+			} else {
+				reqs = nil
+			}
+
+			for _, req := range reqs {
+				if _, resolved := componentOrder[req]; !resolved {
+					continue checkComponent
+				}
+			}
+
+			componentOrder[component.TypeID()] = orderInd
+			unresolvedCount--
+			orderInd++
+		}
+	}
+
+	return componentOrder
 }
 
 func encodeComponent(component ecs.Component) StaticComponent {

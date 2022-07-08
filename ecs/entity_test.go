@@ -32,6 +32,7 @@ func TestNewEntity(t *testing.T) {
 
 		ent.AddComponent(testCreateComplexComponent()) // valid, because we meet requirement
 	})
+	assert.Panics(t, func() { ent.RemoveComponent(testMutableComponentTypeID) }, "should not be deleted, because required be another component")
 
 	assert.Equal(t, 2, ent.components.Len(), "expect two unique components")
 

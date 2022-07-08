@@ -6,27 +6,28 @@ import "github.com/go-glx/ecs/ecs"
 // can be marshaled/unmarshalled to another data view (json, xml, etc..)
 type (
 	StaticWorld struct {
-		Systems  []StaticSystem `xml:"systems>system" json:"systems"`
-		Entities []StaticEntity `xml:"entities>entity" json:"entities"`
+		Systems  []StaticSystem `xml:"systems>system"`
+		Entities []StaticEntity `xml:"entities>entity"`
 	}
 
 	StaticSystem struct {
-		TypeID string `xml:"id,attr" json:"id"`
+		TypeID string `xml:"id,attr"`
 	}
 
 	StaticEntity struct {
-		Name       string            `xml:"name,attr" json:"name"`
-		Components []StaticComponent `xml:"components>component,omitempty" json:"components"`
+		Name       string            `xml:"name,attr"`
+		Components []StaticComponent `xml:"components>component,omitempty"`
 	}
 
 	StaticComponent struct {
-		TypeID string                    `xml:"id,attr" json:"id"`
-		Props  []StaticComponentProperty `xml:"props>prop,omitempty" json:"props"`
+		TypeID string                    `xml:"id,attr"`
+		Order  int                       `xml:"order,attr"`
+		Props  []StaticComponentProperty `xml:"props>prop,omitempty"`
 	}
 
 	StaticComponentProperty struct {
-		Name  string `xml:"name,attr" json:"name"`
-		Value string `xml:"value,attr" json:"value"`
+		Name  string `xml:"name,attr"`
+		Value string `xml:"value,attr"`
 	}
 )
 

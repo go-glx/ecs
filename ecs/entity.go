@@ -46,6 +46,7 @@ func (e *Entity) AddComponent(cmp Component) {
 }
 
 func (e *Entity) RemoveComponent(typeID ComponentTypeID) {
+	e.assertComponentCanBeDeleted(typeID)
 	e.components.Remove(typeID)
 }
 
@@ -74,6 +75,28 @@ func (e *Entity) assertComponentValid(cmp Component) {
 				cmp.TypeID(),
 				e.String(),
 				requirement,
+			))
+		}
+	}
+}
+
+func (e *Entity) assertComponentCanBeDeleted(typeID ComponentTypeID) {
+	for _, component := range e.components.Iterate() {
+		complexComponent, ok := component.(ComponentWithRequirements)
+		if !ok {
+			continue
+		}
+
+		for _, requirement := range complexComponent.RequireComponents() {
+			if typeID != requirement {
+				continue
+			}
+
+			panic(fmt.Errorf(
+				"component '%s' of entity '%s': can be deleted, because it required be '%s'",
+				typeID,
+				e.String(),
+				component.TypeID(),
 			))
 		}
 	}
