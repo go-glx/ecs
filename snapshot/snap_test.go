@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/fe3dback/glx-ecs/component"
-	"github.com/fe3dback/glx-ecs/ecs"
-	"github.com/fe3dback/glx-ecs/system"
+	"github.com/go-glx/ecs/component"
+	"github.com/go-glx/ecs/ecs"
+	"github.com/go-glx/ecs/system"
 )
 
 func TestSnapshot(t *testing.T) {

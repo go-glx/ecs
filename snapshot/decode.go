@@ -5,7 +5,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/fe3dback/glx-ecs/ecs"
+	"github.com/go-glx/ecs/ecs"
 )
 
 func decodeWorld(r *ecs.Registry, sw StaticWorld) *ecs.World {

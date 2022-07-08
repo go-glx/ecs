@@ -6,7 +6,7 @@ import (
 
 	"github.com/fatih/structs"
 
-	"github.com/fe3dback/glx-ecs/ecs"
+	"github.com/go-glx/ecs/ecs"
 )
 
 func encodeWorld(w *ecs.World) StaticWorld {

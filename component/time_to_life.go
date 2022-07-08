@@ -1,6 +1,6 @@
 package component
 
-import "github.com/fe3dback/glx-ecs/ecs"
+import "github.com/go-glx/ecs/ecs"
 
 const TimeToLifeTypeID = "TimeToLife-b935a9df3cdd"
 

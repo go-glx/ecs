@@ -1,6 +1,6 @@
 package component
 
-import "github.com/fe3dback/glx-ecs/ecs"
+import "github.com/go-glx/ecs/ecs"
 
 const Node3DTypeID = "Node3D-49f9d0aa8831"
 

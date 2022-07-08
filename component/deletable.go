@@ -1,6 +1,6 @@
 package component
 
-import "github.com/fe3dback/glx-ecs/ecs"
+import "github.com/go-glx/ecs/ecs"
 
 const DeletableTypeID = "Deletable-a300548e4f48"
 

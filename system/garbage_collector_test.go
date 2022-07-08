@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/fe3dback/glx-ecs/component"
-	"github.com/fe3dback/glx-ecs/ecs"
+	"github.com/go-glx/ecs/component"
+	"github.com/go-glx/ecs/ecs"
 )
 
 func TestGarbageCollector(t *testing.T) {

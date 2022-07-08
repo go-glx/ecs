@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/fe3dback/glx-ecs/ecs"
+	"github.com/go-glx/ecs/ecs"
 )
 
 func Test_decodeWorld(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/fe3dback/glx-ecs/ecs/internal/collection"
-	"github.com/fe3dback/glx-ecs/ecs/internal/ids"
+	"github.com/go-glx/ecs/ecs/internal/collection"
+	"github.com/go-glx/ecs/ecs/internal/ids"
 )
 
 var entityIDs = ids.NewGlobalID()

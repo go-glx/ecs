@@ -1,6 +1,6 @@
 package snapshot
 
-import "github.com/fe3dback/glx-ecs/ecs"
+import "github.com/go-glx/ecs/ecs"
 
 // StaticWorld snapshot of world
 // can be marshaled/unmarshalled to another data view (json, xml, etc..)

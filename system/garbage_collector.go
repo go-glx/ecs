@@ -1,8 +1,8 @@
 package system
 
 import (
-	"github.com/fe3dback/glx-ecs/component"
-	"github.com/fe3dback/glx-ecs/ecs"
+	"github.com/go-glx/ecs/component"
+	"github.com/go-glx/ecs/ecs"
 )
 
 const GarbageCollectorTypeID = "GarbageCollector-adc3353dd900"

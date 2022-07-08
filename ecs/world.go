@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"github.com/fe3dback/glx-ecs/ecs/internal/collection"
+	"github.com/go-glx/ecs/ecs/internal/collection"
 )
 
 type World struct {
