@@ -16,20 +16,43 @@ func encodeWorld(w *ecs.World) StaticWorld {
 	}
 }
 
-func encodeSystems(systems []ecs.SystemTypeID) []StaticSystem {
+func encodeSystems(systems []ecs.System) []StaticSystem {
 	encoded := make([]StaticSystem, 0, len(systems))
 
+	// systems in order
 	for _, system := range systems {
 		encoded = append(encoded, StaticSystem{
-			TypeID: string(system),
+			TypeID: string(system.TypeID()),
+			Props:  encodeSystemProps(system),
 		})
 	}
 
-	sort.Slice(encoded, func(i, j int) bool {
-		return encoded[i].TypeID <= encoded[j].TypeID
+	return encoded
+}
+
+func encodeSystemProps(s ecs.System) []StaticSystemProperty {
+	sys, ok := s.(ecs.SystemConfigurable)
+	if !ok {
+		return nil
+	}
+
+	props := make([]StaticSystemProperty, 0)
+	for _, property := range sys.Props() {
+		props = append(props, StaticSystemProperty{
+			Name:  property.Name(),
+			Value: property.Encode(),
+		})
+	}
+
+	sort.Slice(props, func(i, j int) bool {
+		if props[i].Name != props[j].Name {
+			return props[i].Name <= props[j].Name
+		}
+
+		return props[i].Value <= props[j].Value
 	})
 
-	return encoded
+	return props
 }
 
 func encodeEntities(entities []*ecs.Entity) []StaticEntity {

@@ -185,6 +185,69 @@ func (e *MyEngine) createWorld() *ecs.World {
 }
 ```
 
+### System Properties
+
+System can have unique properties, that can be same or different in different worlds.
+All system properties will be encoded/decode to snapshot. This very helpful for
+making map editors and levels loading.
+
+By default, 3 most common property types is supported out of the box:
+- props.Int
+- props.Float (32bit)
+- props.String
+
+but you can make any custom property, just implement `props.Property` interface
+
+```go
+type Gravity struct {
+  propForce *props.Float
+}
+
+func NewGravity() *Gravity {
+  return &Gravity{
+    propForce: props.NewFloat("force", 9.8),
+  }
+}
+
+func (s *Gravity) Props() []props.Property {
+  return []props.Property{
+    s.propForce,
+  }
+}
+
+func (s *Gravity) OnUpdate(w *ecs.World) {
+  ...
+  cmp.y += 100 * s.propForce.Get() * s.engine.DeltaTime()
+  //             ^
+  //             current property value (9.8)
+  ...
+}
+```
+
+This will be encoded as:
+
+```xml
+<StaticWorld>
+  <systems>
+    <system id="Gravity-adc3353dd900">
+      <props>
+        <prop name="force" value="9.8"></prop>
+      </props>
+    </system>
+  </systems>
+</StaticWorld>
+```
+
+Do not make all system consts as properties, because it will make your snapshots bigger.
+Also, keep in mind that any snapshot value will ALWAYS override default property value.
+
+Go code value and snapshot value will be mapped by specified name
+
+**Tips**: 
+- properties is absolutely useless if you not use snapshot save/load feature. (example: levels loading)
+- for any runtime properties (that not needed to store in files) - just use normal go struct values
+- use shared mutable variables (just `*string` ptr for example in constructor) for linking different systems together   
+
 ### Registry
 
 All __Systems__ and __Components__ MUST be registered

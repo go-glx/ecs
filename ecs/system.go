@@ -1,5 +1,7 @@
 package ecs
 
+import "github.com/go-glx/ecs/props"
+
 type SystemTypeID string
 
 type System interface {
@@ -18,4 +20,9 @@ type SystemUpdatable interface {
 type SystemSyncable interface {
 	System
 	OnSync(w *World)
+}
+
+type SystemConfigurable interface {
+	System
+	Props() []props.Property
 }

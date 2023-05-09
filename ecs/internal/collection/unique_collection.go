@@ -34,6 +34,14 @@ func (s *UniqueCollection[K, V]) Iterate() map[K]V {
 	return s.collection
 }
 
+func (s *UniqueCollection[K, V]) IterateInOrder(order []K, itt func(K, V)) {
+	for _, key := range order {
+		if val, exist := s.collection[key]; exist {
+			itt(key, val)
+		}
+	}
+}
+
 func (s *UniqueCollection[K, V]) Get(id K) (V, bool) {
 	data, exist := s.collection[id]
 	return data, exist

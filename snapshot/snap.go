@@ -11,7 +11,13 @@ type (
 	}
 
 	StaticSystem struct {
-		TypeID string `xml:"id,attr"`
+		TypeID string                 `xml:"id,attr"`
+		Props  []StaticSystemProperty `xml:"props>prop,omitempty"`
+	}
+
+	StaticSystemProperty struct {
+		Name  string `xml:"name,attr"`
+		Value string `xml:"value,attr"`
 	}
 
 	StaticEntity struct {

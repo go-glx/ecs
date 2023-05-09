@@ -9,11 +9,15 @@ import (
 )
 
 func decodeWorld(r *ecs.Registry, sw StaticWorld) *ecs.World {
-	return ecs.NewWorld(
-		r,
-		ecs.WithInitialSystems(decodeSystems(sw)...),
-		ecs.WithInitialEntities(decodeEntities(r, sw)...),
-	)
+	initializers := make([]ecs.WorldInitializer, 0)
+	initializers = append(initializers, ecs.WithInitialSystems(decodeSystems(sw)...))
+	initializers = append(initializers, ecs.WithInitialEntities(decodeEntities(r, sw)...))
+
+	for systemID, props := range decodeSystemProps(sw) {
+		initializers = append(initializers, ecs.WithInitialSystemProperties(systemID, props))
+	}
+
+	return ecs.NewWorld(r, initializers...)
 }
 
 func decodeSystems(sw StaticWorld) []ecs.SystemTypeID {
@@ -24,6 +28,25 @@ func decodeSystems(sw StaticWorld) []ecs.SystemTypeID {
 	}
 
 	return result
+}
+
+func decodeSystemProps(sw StaticWorld) map[ecs.SystemTypeID]map[string]string {
+	data := make(map[ecs.SystemTypeID]map[string]string)
+
+	for _, system := range sw.Systems {
+		if len(system.Props) <= 0 {
+			continue
+		}
+
+		props := map[string]string{}
+		for _, prop := range system.Props {
+			props[prop.Name] = prop.Value
+		}
+
+		data[ecs.SystemTypeID(system.TypeID)] = props
+	}
+
+	return data
 }
 
 func decodeEntities(r *ecs.Registry, sw StaticWorld) []*ecs.Entity {

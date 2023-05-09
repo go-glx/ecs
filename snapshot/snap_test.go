@@ -65,12 +65,14 @@ func testCreateStaticWorld() StaticWorld {
 				Components: []StaticComponent{
 					{
 						TypeID: "Deletable-a300548e4f48",
+						Order:  0,
 						Props: []StaticComponentProperty{
 							{Name: "Alive", Value: "true"},
 						},
 					},
 					{
 						TypeID: "Node2D-7c40b8e315a5",
+						Order:  1,
 						Props: []StaticComponentProperty{
 							{Name: "X", Value: "5"},
 							{Name: "Y", Value: "10"},
@@ -83,6 +85,7 @@ func testCreateStaticWorld() StaticWorld {
 				Components: []StaticComponent{
 					{
 						TypeID: "Node2D-7c40b8e315a5",
+						Order:  0,
 						Props: []StaticComponentProperty{
 							{Name: "X", Value: "4"},
 							{Name: "Y", Value: "7"},

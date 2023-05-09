@@ -1,14 +1,17 @@
 package ecs
 
 import (
+	"fmt"
+
 	"github.com/go-glx/ecs/ecs/internal/collection"
 )
 
 type World struct {
 	registry *Registry
 
-	entities *collection.UniqueCollection[entityID, *Entity]
-	systems  *collection.UniqueCollection[SystemTypeID, System]
+	entities     *collection.UniqueCollection[entityID, *Entity]
+	systems      *collection.UniqueCollection[SystemTypeID, System]
+	systemsOrder []SystemTypeID
 
 	createEntitiesQueue []*Entity
 	dropEntitiesQueue   []entityID
@@ -20,8 +23,9 @@ func NewWorld(registry *Registry, initializers ...WorldInitializer) *World {
 	world := &World{
 		registry: registry,
 
-		entities: collection.NewUniqueCollection[entityID, *Entity](),
-		systems:  collection.NewUniqueCollection[SystemTypeID, System](),
+		entities:     collection.NewUniqueCollection[entityID, *Entity](),
+		systems:      collection.NewUniqueCollection[SystemTypeID, System](),
+		systemsOrder: make([]SystemTypeID, 0, 128),
 
 		createEntitiesQueue: make([]*Entity, 0),
 		dropEntitiesQueue:   make([]entityID, 0),
@@ -49,6 +53,10 @@ func (w *World) InitializeWith(initializers ...WorldInitializer) {
 // instead it will add System to queue,
 // all systems will be created right before world Update
 func (w *World) AddSystem(systemTypeID SystemTypeID) {
+	if w.systems.Has(systemTypeID) {
+		panic(fmt.Errorf("system '%s' already added to ECS world", systemTypeID))
+	}
+
 	w.createSystemsQueue = append(w.createSystemsQueue, systemTypeID)
 }
 
@@ -80,6 +88,22 @@ func (w *World) addEntityInternal(entity *Entity) {
 
 func (w *World) addSystemInternal(systemTypeID SystemTypeID) {
 	w.systems.Set(systemTypeID, w.registry.getSystemOfType(systemTypeID))
+	w.systemsOrder = append(w.systemsOrder, systemTypeID)
+}
+
+func (w *World) removeSystemInternal(systemTypeID SystemTypeID) {
+	w.systems.Remove(systemTypeID)
+
+	newSystemsOrder := make([]SystemTypeID, 0, len(w.systemsOrder))
+	for _, id := range w.systemsOrder {
+		if id == systemTypeID {
+			continue
+		}
+
+		newSystemsOrder = append(newSystemsOrder, id)
+	}
+
+	w.systemsOrder = newSystemsOrder
 }
 
 func (w *World) assertEntityHasKnownComponents(entity *Entity) {
@@ -102,11 +126,19 @@ func (w *World) Update() {
 // this function will call SystemSyncable.OnSync in all registered systems
 // it`s useful for drawing World
 func (w *World) Sync() {
-	for _, system := range w.systems.Iterate() {
+	w.systems.IterateInOrder(w.systemsOrder, func(id SystemTypeID, system System) {
 		if systemSyncer, ok := system.(SystemSyncable); ok {
 			systemSyncer.OnSync(w)
 		}
-	}
+	})
+}
+
+// IterateOverSystems can be used to iterate over all world systems
+// and execute some own custom logic on it
+func (w *World) IterateOverSystems(itt func(systemID string, system System)) {
+	w.systems.IterateInOrder(w.systemsOrder, func(id SystemTypeID, system System) {
+		itt(string(id), system)
+	})
 }
 
 // Entities should be used only for inspection
@@ -124,11 +156,11 @@ func (w *World) Entities() []Entity {
 }
 
 func (w *World) update() {
-	for _, system := range w.systems.Iterate() {
+	w.systems.IterateInOrder(w.systemsOrder, func(id SystemTypeID, system System) {
 		if systemUpdatable, ok := system.(SystemUpdatable); ok {
 			systemUpdatable.OnUpdate(w)
 		}
-	}
+	})
 }
 
 func (w *World) createQueued() {
@@ -146,7 +178,7 @@ func (w *World) createQueued() {
 
 func (w *World) dropQueued() {
 	for _, systemID := range w.dropSystemsQueue {
-		w.systems.Remove(systemID)
+		w.removeSystemInternal(systemID)
 	}
 
 	for _, entityID := range w.dropEntitiesQueue {
