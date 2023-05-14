@@ -70,6 +70,10 @@ func encodeEntities(entities []*ecs.Entity) []StaticEntity {
 }
 
 func encodeEntity(entity *ecs.Entity) StaticEntity {
+	if entity.IsPrefab() {
+		return StaticEntity{Prefab: entity.PrefabID()}
+	}
+
 	return StaticEntity{
 		Name:       entity.Name(),
 		Components: encodeComponents(ecs.ExtractEntityComponents(entity)),

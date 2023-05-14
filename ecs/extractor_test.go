@@ -27,10 +27,9 @@ func testPrepareExtractableWorld() *World {
 }
 
 func TestExtractWorldSystems(t *testing.T) {
-	expected := []SystemTypeID{testMutateSystemTypeID}
 	actual := ExtractWorldSystems(testPrepareExtractableWorld())
 
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, testMutateSystemTypeID, string(actual[0].TypeID()))
 }
 
 func TestExtractWorldEntities(t *testing.T) {

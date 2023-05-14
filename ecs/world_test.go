@@ -39,7 +39,7 @@ func TestNewWorld(t *testing.T) {
 
 	// -- emulate step: 1
 	w.Update()
-	w.Sync()
+	w.Draw()
 	// -- -- result step: 1
 
 	assert.Equal(t, 1, w.systems.Len(), "system created")
@@ -52,7 +52,7 @@ func TestNewWorld(t *testing.T) {
 
 	// -- emulate step: 2
 	w.Update()
-	w.Sync()
+	w.Draw()
 	// -- -- result step: 2
 
 	assert.Equal(t, 1, w.entities.Len(), "second entity deleted")
@@ -60,7 +60,7 @@ func TestNewWorld(t *testing.T) {
 
 	// -- emulate step: 3
 	w.Update()
-	w.Sync()
+	w.Draw()
 	// -- -- result step: 3
 
 	assert.Equal(t, 3, cmpState.counter, "system inc counter to 3")

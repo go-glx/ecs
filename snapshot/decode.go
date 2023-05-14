@@ -60,6 +60,18 @@ func decodeEntities(r *ecs.Registry, sw StaticWorld) []*ecs.Entity {
 }
 
 func decodeEntity(r *ecs.Registry, sw StaticEntity) *ecs.Entity {
+	if sw.Prefab != "" {
+		return decodePrefabEntity(r, sw)
+	}
+
+	return decodeRichEntity(r, sw)
+}
+
+func decodePrefabEntity(r *ecs.Registry, sw StaticEntity) *ecs.Entity {
+	return r.CreatePrefabEntity(sw.Prefab)
+}
+
+func decodeRichEntity(r *ecs.Registry, sw StaticEntity) *ecs.Entity {
 	ent := ecs.NewEntity(sw.Name)
 
 	for _, component := range sw.Components {

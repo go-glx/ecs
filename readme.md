@@ -5,7 +5,8 @@ for using in any game engine
 
 Library use generics for typing and require go1.18
 
-Not Safe for concurrent use
+- Not Safe for concurrent use
+- [WIP] Not stable API until version 1.0
 
 --
 
@@ -14,7 +15,7 @@ Features:
 - Simple API
 - Support marshal/unmarshal world to XML and other formats
 - written with SOLID in mind, easy integrate with any engine, that respects dependency injection pattern
-- Fast component search/query (bitmaps, filters, etc..) (__TODO__) 
+- Fast component search/query (bitmaps, filters, etc..) (__TODO__)
 
 ## Usage
 
@@ -27,8 +28,8 @@ registry := ecs.NewRegistry()
 world := ecs.NewWorld(registry)
 
 for {
-  world.Update() // update
-  world.Sync()   // draw
+  world.Update()
+  world.Draw()
 }
 ```
 
@@ -66,8 +67,8 @@ import "github.com/fe3dback/glx-ecs/ecs"
 // some unique type ID
 // this used for marshal/unmarshal world to XML,JSON,etc..
 // this should NOT change during any code refactoring
-// recommended value: HumanReadableName + UUIDv4 (last part)
-const Node2DTypeID = "Node2D-a300548e4f48" 
+// recommended value: namespace <author>/<componentName>
+const Node2DTypeID = "fe3dback/Node2D" 
 
 // Component data
 type Node2D struct {
@@ -110,45 +111,43 @@ ent.AddComponent(NewNode2D(10, 5))
 
 Systems is just composition of __interface__`s:
 
-- `OnUpdate(w *World)`
-- `OnSync(w *World)`
+- `OnInit(w RuntimeWorld)`
+- `OnUpdate(w RuntimeWorld)`
+- `OnSync(w RuntimeWorld)`
 
 And system method `TypeID() ecs.SystemTypeID`
 
-Any struct can implement one or both of this methods:
+Any struct can implement one or more of this methods
+ECS will help with entities/components fast filtering:
 
 ```go
 import "github.com/fe3dback/glx-ecs/ecs"
 
-const GravityTypeID = "Gravity-adc3353dd900"
-
-type Gravity struct {}
-
-func NewGravity() *Gravity { 
-  return &Gravity{}
+type Gravity struct {
+  engine engine
+  filter Filter1[Node2D]
 }
 
-func (g Gravity) TypeID() ecs.SystemTypeID {
-  return GravityTypeID
+func NewGravity(engine engine) *Gravity {
+  return &Gravity{engine: engine}
 }
 
-func (s *Gravity) OnUpdate(w *ecs.World) {
-  // some update code
-  // will be executed every world.Update()
+func (g *Gravity) TypeID() ecs.SystemTypeID {
+  return "fe3dback/Gravity"
 }
-```
 
-ECS will help with entities/components fast filter:
+func (s *Gravity) OnInit(w RuntimeWorld) {
+  t.filter = NewFilter1[Node2D](w)
+}
 
-```go
-func (s *Gravity) OnUpdate(w *ecs.World) {
+func (s *Gravity) OnUpdate(w ecs.RuntimeWorld) {
   // full typing support, because of go1.18 generics
-  found := ecs.FindComponent[Node2D](w)
-  
-  for entity, cmp := range found {
+  found := t.filter.Find()
+  for found.Next() {
     // entity = *Entity instance
     // cmp    = *Node2D instance
-	
+    ent, cmp := found.Get()
+
     // for example, update y value of Node2D
     // in all world entities to 100px per second
     cmp.y += 100 * s.engine.DeltaTime()
@@ -167,6 +166,8 @@ manner with dependency injection pattern:
 type engine interface {
   DeltaTime() float64
 }
+
+// ..
 
 type Gravity struct {
   engine engine
@@ -215,7 +216,7 @@ func (s *Gravity) Props() []props.Property {
   }
 }
 
-func (s *Gravity) OnUpdate(w *ecs.World) {
+func (s *Gravity) OnUpdate(w ecs.RuntimeWorld) {
   ...
   cmp.y += 100 * s.propForce.Get() * s.engine.DeltaTime()
   //             ^
@@ -229,7 +230,7 @@ This will be encoded as:
 ```xml
 <StaticWorld>
   <systems>
-    <system id="Gravity-adc3353dd900">
+    <system id="fe3dback/Gravity">
       <props>
         <prop name="force" value="9.8"></prop>
       </props>
@@ -253,9 +254,6 @@ Go code value and snapshot value will be mapped by specified name
 All __Systems__ and __Components__ MUST be registered
 before adding them to __World__
 
-Registry allows to marshal/unmarshal world automatically
-to XML or other formats, it`s very useful for storing levels in files
-
 ```go
 r := ecs.NewRegistry()
 r.RegisterSystem(system.NewGarbageCollector())
@@ -272,45 +270,45 @@ r.RegisterComponent(owncmp.NewNode2D(5, 10))
 world := ecs.NewWorld(r)
 ```
 
+Notes:
+- Registry allows to marshal/unmarshal world automatically to XML or other formats, it`s very useful for storing levels in files.
+- Also, registry used for compute components bitmaps hash for fast filtering.
+
 ## Drawing world
 
 You can define some system that can draw
 all game objects, or some specified components
 
 ```go
-type renderer interface {
-  DrawBox(x, y, w, h int) // for example
+type renderer interface {          // it`s your engine stuff
+  DrawTexture2D(x, y, assetID int) // for example
 }
 
 type Drawer struct {
   renderer renderer
 }
 
-func (s *Drawer) OnSync(w *ecs.World) {
-  // OnSync called right after world.OnUpdate
+func (s *Drawer) OnDraw(w ecs.RuntimeWorld) {
+  // OnDraw called right after world.OnUpdate
   // its best place to draw world
 
-  textures := ecs.FindComponent[Texture](w)
-  for _, tex := range textures {
-    s.renderer.DrawBox(tex.x, tex.y, tex.w, tex.h)
+  found := NewFilter2[Texture2D, Transform2D](w).Find()
+  for found.Next() {
+    _, texture, transform := found.Get()
+    
+    s.renderer.DrawTexture2D(
+      transform.x, 
+      transform.y, 
+      texture.assetID
+    )
   }
 }
 ```
 
 ## Snapshot (Save/Load world to file)
 
-You can create snapshot from World and marshal it into
-XML or other format
-
-This allows for example to load World from external editor.
-Or maintain world save/load in custom game editor.
-
-This function not suitable for save/load game systems.
-Snapshot will have only public fields from all components,
-but not have any private fields evaluated during World.Update()
-
-Anyway in can be used as save/load game system in super simple games
-and if you maintain all components state only in Public properties
+Lib can create snapshots of the World and marshal it into
+XML/json/etc.. format
 
 ```go
 import "github.com/fe3dback/glx-ecs/snapshot"
@@ -330,12 +328,16 @@ Marshalled XML:
 ```xml
 <StaticWorld>
   <systems>
-    <system id="Gravity-adc3353dd900"></system>
+    <system id="fe3dback/Gravity">
+      <props>
+        <prop name="force" value="9.8"></prop>
+      </props>
+    </system>
   </systems>
   <entities>
     <entity name="my entity">
       <components>
-        <component id="Node2D-a300548e4f48">
+        <component id="fe3dback/Node2D">
           <props>
             <prop name="X" value="5"></prop>
             <prop name="Y" value="10"></prop>
@@ -346,3 +348,8 @@ Marshalled XML:
   </entities>
 </StaticWorld>
 ```
+Tips (what you can do with snapshots):
+- save/load world from files. (useful for map editors)
+- in-mem save/load state inside custom map editor (immediate-mode testing, like unity/unreal "play" button)
+- don`t use snapshots as game save/load system. Snapshot will have only public fields from all components, but not have any private fields evaluated during World.Update(). 
+

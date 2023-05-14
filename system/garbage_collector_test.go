@@ -12,15 +12,12 @@ import (
 func TestGarbageCollector(t *testing.T) {
 	r := ecs.NewRegistry()
 	r.RegisterSystem(NewGarbageCollector())
-	r.RegisterComponent(component.NewDeletable())
 	r.RegisterComponent(component.NewTimeToLife(0))
 
 	// -- create world
 	ent1 := ecs.NewEntity("ent1")
-	ent1.AddComponent(component.NewDeletable())
 
 	ent2 := ecs.NewEntity("ent2")
-	ent2.AddComponent(component.NewDeletable())
 	ent2.AddComponent(component.NewTimeToLife(3))
 
 	// -- create world

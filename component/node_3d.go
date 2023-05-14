@@ -2,7 +2,7 @@ package component
 
 import "github.com/go-glx/ecs/ecs"
 
-const Node3DTypeID = "Node3D-49f9d0aa8831"
+const Node3DTypeID = "internal/Node3D"
 
 type Node3D struct {
 	X float64

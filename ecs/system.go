@@ -4,6 +4,15 @@ import "github.com/go-glx/ecs/props"
 
 type SystemTypeID string
 
+type (
+	// RuntimeWorld is minimal world interface for interacting from systems update/sync/etc..
+	RuntimeWorld interface {
+		AddEntity(entity *Entity)
+		AddPrefabEntity(prefabID string)
+		RemoveEntity(entity *Entity)
+	}
+)
+
 type System interface {
 	// TypeID is Unique component type identifier
 	// some static UUIDv4 is best option
@@ -12,14 +21,19 @@ type System interface {
 	TypeID() SystemTypeID
 }
 
-type SystemUpdatable interface {
+type SystemInitializable interface {
 	System
-	OnUpdate(w *World)
+	OnInit(w RuntimeWorld)
 }
 
-type SystemSyncable interface {
+type SystemUpdatable interface {
 	System
-	OnSync(w *World)
+	OnUpdate(w RuntimeWorld)
+}
+
+type SystemDrawable interface {
+	System
+	OnDraw(w RuntimeWorld)
 }
 
 type SystemConfigurable interface {

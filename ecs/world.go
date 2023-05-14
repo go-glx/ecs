@@ -17,6 +17,8 @@ type World struct {
 	dropEntitiesQueue   []entityID
 	createSystemsQueue  []SystemTypeID
 	dropSystemsQueue    []SystemTypeID
+
+	cacheHooks map[string]func(changedID ComponentTypeID)
 }
 
 func NewWorld(registry *Registry, initializers ...WorldInitializer) *World {
@@ -74,6 +76,14 @@ func (w *World) AddEntity(entity *Entity) {
 	w.createEntitiesQueue = append(w.createEntitiesQueue, entity)
 }
 
+// AddPrefabEntity will create entity from prefab with all
+// components and then add this entity into the world
+func (w *World) AddPrefabEntity(prefabID string) {
+	w.AddEntity(
+		w.registry.CreatePrefabEntity(prefabID),
+	)
+}
+
 // RemoveEntity will not remove entity immediately after call
 // this just mark entity as deleted
 // all entities will be deleted after world Update
@@ -82,12 +92,31 @@ func (w *World) RemoveEntity(entity *Entity) {
 }
 
 func (w *World) addEntityInternal(entity *Entity) {
+	if entity.world != nil && entity.world != w {
+		panic(fmt.Errorf("failed add entity '%s (%d)' into world. (already exist in another world)", entity.name, entity.id))
+	}
+
+	entity.world = w
+	entity.recalculateHashes()
 	w.assertEntityHasKnownComponents(entity)
 	w.entities.Set(entity.id, entity)
 }
 
+func (w *World) removeEntityInternal(entityID entityID) {
+	if ent, exist := w.entities.Get(entityID); exist {
+		ent.world = nil
+	}
+
+	w.entities.Remove(entityID)
+}
+
 func (w *World) addSystemInternal(systemTypeID SystemTypeID) {
-	w.systems.Set(systemTypeID, w.registry.getSystemOfType(systemTypeID))
+	system := w.registry.getSystemOfType(systemTypeID)
+	if systemInit, ok := system.(SystemInitializable); ok {
+		systemInit.OnInit(w)
+	}
+
+	w.systems.Set(systemTypeID, system)
 	w.systemsOrder = append(w.systemsOrder, systemTypeID)
 }
 
@@ -122,13 +151,13 @@ func (w *World) Update() {
 	w.dropQueued()
 }
 
-// Sync should be called after every game tick (frame)
-// this function will call SystemSyncable.OnSync in all registered systems
+// Draw should be called after every game tick (frame)
+// this function will call SystemDrawable.OnSync in all registered systems
 // it`s useful for drawing World
-func (w *World) Sync() {
+func (w *World) Draw() {
 	w.systems.IterateInOrder(w.systemsOrder, func(id SystemTypeID, system System) {
-		if systemSyncer, ok := system.(SystemSyncable); ok {
-			systemSyncer.OnSync(w)
+		if systemSyncer, ok := system.(SystemDrawable); ok {
+			systemSyncer.OnDraw(w)
 		}
 	})
 }
@@ -145,6 +174,8 @@ func (w *World) IterateOverSystems(itt func(systemID string, system System)) {
 // and read-only engine wide operations
 // all normal work with Entities, should be done
 // wia ECS systems
+// Here we copy all entities into result slice (for additional safe), but
+// don`t try to change it internally, or ECS would be broken
 func (w *World) Entities() []Entity {
 	list := make([]Entity, 0, w.entities.Len())
 
@@ -182,7 +213,7 @@ func (w *World) dropQueued() {
 	}
 
 	for _, entityID := range w.dropEntitiesQueue {
-		w.entities.Remove(entityID)
+		w.removeEntityInternal(entityID)
 	}
 
 	w.dropSystemsQueue = nil

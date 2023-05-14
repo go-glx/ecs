@@ -22,6 +22,7 @@ type (
 
 	StaticEntity struct {
 		Name       string            `xml:"name,attr"`
+		Prefab     string            `xml:"prefab,attr"`
 		Components []StaticComponent `xml:"components>component,omitempty"`
 	}
 

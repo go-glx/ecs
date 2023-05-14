@@ -3,17 +3,23 @@ package ecs
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/go-glx/ecs/ecs/internal/bits"
 )
 
 type Registry struct {
-	components map[ComponentTypeID]Component
-	systems    map[SystemTypeID]System
+	components   map[ComponentTypeID]Component
+	systems      map[SystemTypeID]System
+	prefabs      map[string]Prefab
+	bitsRegistry *bits.Registry
 }
 
 func NewRegistry() *Registry {
 	return &Registry{
-		components: make(map[ComponentTypeID]Component),
-		systems:    make(map[SystemTypeID]System),
+		components:   make(map[ComponentTypeID]Component),
+		systems:      make(map[SystemTypeID]System),
+		prefabs:      make(map[string]Prefab),
+		bitsRegistry: bits.NewRegistry(),
 	}
 }
 
@@ -25,6 +31,7 @@ func NewRegistry() *Registry {
 func (r *Registry) RegisterComponent(component Component) {
 	r.assertTypeIDNotRegistered(string(component.TypeID()), component, "RegisterComponent")
 	r.components[component.TypeID()] = component
+	r.bitsRegistry.RegisterComponent(string(component.TypeID()))
 }
 
 // CreateComponentWithDefaultValues will return gold copy of
@@ -44,6 +51,17 @@ func (r *Registry) CreateComponentWithDefaultValues(typeID ComponentTypeID) (Com
 	return createdCopy, exist
 }
 
+// CreatePrefabEntity will return gold copy of
+// prefab entity with all components and their settings
+func (r *Registry) CreatePrefabEntity(prefabID string) *Entity {
+	pref, exist := r.prefabs[prefabID]
+	if !exist {
+		panic(fmt.Errorf("failed create entity from prefab '%s': prefab not registered", prefabID))
+	}
+
+	return pref.factory()
+}
+
 // RegisterSystem will store System by their typeID
 //
 // This allows ECS marshal/unmarshal world from
@@ -52,6 +70,14 @@ func (r *Registry) RegisterSystem(system System) {
 	r.assertTypeIDNotRegistered(string(system.TypeID()), system, "RegisterSystem")
 	r.assertSystemValid(system)
 	r.systems[system.TypeID()] = system
+}
+
+// RegisterPrefab allows to create entities from prefabs in runtime
+// instead of storing all same entities and their components as separate thing
+// this call will register prefab factory function, that will be called every time
+// ecs wants to create new entity of this prefab type
+func (r *Registry) RegisterPrefab(prefab Prefab) {
+	r.prefabs[prefab.id] = prefab
 }
 
 func (r *Registry) assertTypeIDNotRegistered(id string, obj any, action string) {

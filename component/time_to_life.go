@@ -2,8 +2,9 @@ package component
 
 import "github.com/go-glx/ecs/ecs"
 
-const TimeToLifeTypeID = "TimeToLife-b935a9df3cdd"
+const TimeToLifeTypeID = "internal/TimeToLife"
 
+// TimeToLife is example component. See example system processing in system.GarbageCollector
 type TimeToLife struct {
 	TicksLeft uint
 }
@@ -20,10 +21,4 @@ func NewTimeToLife(ticksLeft uint) *TimeToLife {
 
 func (c TimeToLife) TypeID() ecs.ComponentTypeID {
 	return TimeToLifeTypeID
-}
-
-func (c TimeToLife) RequireComponents() []ecs.ComponentTypeID {
-	return []ecs.ComponentTypeID{
-		DeletableTypeID,
-	}
 }

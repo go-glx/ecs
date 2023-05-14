@@ -6,6 +6,7 @@ import (
 
 func BenchmarkFindByComponent(b *testing.B) {
 	r := NewRegistry()
+	r.RegisterComponent(testMutableComponent{})
 	w := NewWorld(r)
 
 	ent := NewEntity("entWithNode")
@@ -17,10 +18,18 @@ func BenchmarkFindByComponent(b *testing.B) {
 
 	w.Update() // simulate tick, add queued entities
 
+	flt := NewFilter1[testMutableComponent](w)
+
 	for i := 0; i < b.N; i++ {
-		found := FindComponent[testMutableComponent](w)
-		if len(found) != 1 {
-			b.Fatalf("expected only one entity with Node2D, found: %d", len(found))
+		found := flt.Find()
+		count := 0
+
+		for found.Next() {
+			count++
+		}
+
+		if count != 1 {
+			b.Fatalf("expected only one entity with Node2D, found: %d", count)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package ecs
 
-const testMutableComponentTypeID = "MutableComponent-d272cd8609c8"
-const testComplexComponentTypeID = "ComplexComponent-ad0cd3e9a49c"
+const testMutableComponentTypeID = "test/MutableComponent"
+const testComplexComponentTypeID = "test/ComplexComponent"
 
 type testMutableComponent struct {
 	counter int

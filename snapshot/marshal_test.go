@@ -19,30 +19,27 @@ func testCreateStaticWorldXML() string {
 	//language=XML
 	return `<StaticWorld>
   <systems>
-    <system id="GarbageCollector-adc3353dd900"></system>
+    <system id="internal/GarbageCollector">
+      <props></props>
+    </system>
   </systems>
   <entities>
-    <entity name="ent1">
+    <entity name="ent1" prefab="">
       <components>
-        <component id="Deletable-a300548e4f48">
+        <component id="internal/Node2D" order="0">
           <props>
-            <prop name="Alive" value="true"></prop>
-          </props>
-        </component>
-        <component id="Node2D-7c40b8e315a5">
-          <props>
-            <prop name="X" value="5"></prop>
-            <prop name="Y" value="10"></prop>
+            <prop name="X" value="5"/>
+            <prop name="Y" value="10"/>
           </props>
         </component>
       </components>
     </entity>
-    <entity name="ent2">
+    <entity name="ent2" prefab="">
       <components>
-        <component id="Node2D-7c40b8e315a5">
+        <component id="internal/Node2D" order="0">
           <props>
-            <prop name="X" value="4"></prop>
-            <prop name="Y" value="7"></prop>
+            <prop name="X" value="4"/>
+            <prop name="Y" value="7"/>
           </props>
         </component>
       </components>

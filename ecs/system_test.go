@@ -1,20 +1,28 @@
 package ecs
 
-const testMutateSystemTypeID = "MutateSystem-4aa50a28aa2b"
+const testMutateSystemTypeID = "internal/MutateSystem"
 
 type testMutateSystem struct {
+	filter Filter1[testMutableComponent]
 }
 
 func testCreateMutateSystem() *testMutateSystem {
 	return &testMutateSystem{}
 }
 
-func (t testMutateSystem) TypeID() SystemTypeID {
+func (t *testMutateSystem) TypeID() SystemTypeID {
 	return testMutateSystemTypeID
 }
 
-func (t *testMutateSystem) OnUpdate(w *World) {
-	for _, cmp := range FindComponent[testMutableComponent](w) {
+func (t *testMutateSystem) OnInit(w RuntimeWorld) {
+	t.filter = NewFilter1[testMutableComponent](w)
+}
+
+func (t *testMutateSystem) OnUpdate(w RuntimeWorld) {
+	found := t.filter.Find()
+
+	for found.Next() {
+		_, cmp := found.Get()
 		cmp.counter++
 	}
 }
